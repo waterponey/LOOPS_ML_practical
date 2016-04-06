@@ -1,3 +1,5 @@
+package MovieRecommender
+
 import java.util.Random
 
 import org.apache.spark.SparkContext
@@ -28,36 +30,46 @@ import org.apache.spark.mllib.recommendation.{ALS, Rating, MatrixFactorizationMo
 
 class MovieRecommenderALS(sc: SparkContext, movieLensHomeDir: String) {
 
-  /** Read the ratings file and parse its lines to get a PairRDD[Long, Rating[Int, Int, Double]]
+  /** Question 1a:
+    * Read the ratings file and parse its lines to get a PairRDD[Long, Rating[Int, Int, Double]]
     * containing (timestamp % 10, Rating(userId, movieId, rating)) */
   def readRatingsFile(path: String): RDD[(Long, Rating)] = {
     ???
   }
 
-  /** Read the movies file and parses its lines to get a PairRDD[Int, String]
+  /** Question 1b
+    * Read the movies file and parses its lines to get a PairRDD[Int, String]
     * containing (movieId, movieName) */
   def readMoviesFile(path: String): RDD[(Int, String)] = {
     ???
   }
 
+  /** Question 2a
+    * Count the number of ratings from the ratings file */
   def countRatings(ratings: RDD[(Long, Rating)]): Long = {
     ???
   }
 
+  /** Question 2b
+    * Count the number of users from the ratings file */
   def countUsers(ratings: RDD[(Long, Rating)]): Long = {
     ???
   }
 
+  /** Question 2c
+    * Count the number of movies from the ratings file */
   def countMovies(ratings: RDD[(Long, Rating)]): Long = {
     ???
   }
 
-  /** Return the ID of the 50 most rated movies */
+  /** Question 3
+    * Return the ID of the 50 most rated movies */
   def getMostPopularMoviesID(ratings: RDD[(Long, Rating)]): Seq[Int] = {
     ???
   }
 
-  /** Using ratings data:
+  /** Question 4
+    * Using ratings data:
     * Split ratings into train (60%), validation (20%), and test (20%) sets.
     * Use the RDD.randomSplit(Array(0.8, 0.2)) method, with seed 42
     * The resulting RDDs must be cached to avoid being recomputed at each loop of the cross-validation. */
@@ -71,22 +83,27 @@ class MovieRecommenderALS(sc: SparkContext, movieLensHomeDir: String) {
     (training, validation, test)
   }
 
-  /** Compute RMSE (Root Mean Squared Error). */
+  /** Question 5
+    * Compute RMSE (Root Mean Squared Error). */
   def computeRmse(model: MatrixFactorizationModel, data: RDD[Rating], n: Long): Double = {
     ???
   }
 
-  /** Compute the mean rating of the union of the training and validation sets.
-    * This will serve as a naive predictor (always predicting the mean rating) to compute a baseline performance.
-    */
+  /** Question 6
+    * Compute the mean rating of the union of the training and validation sets.
+    * This will serve as a naive predictor (always predicting the mean rating) to compute a baseline performance. */
   def computeMeanRating(training: RDD[Rating], validation: RDD[Rating]): Double = {
     ???
   }
 
+  /** Question 7
+    * Compute a baseline RMSE using the meanRating as prediction of the user rating. */
   def computeBaselineRMSE(meanRating: Double, test: RDD[Rating], numTest: Long): Double = {
     ???
   }
 
+  /** Question 8
+    * Recommend the 50 movies whith the higher predicted rating among the candidate movies */
   def getRecommendations(bestModel: MatrixFactorizationModel, candidates: RDD[Int]): Array[Rating] = {
     ???
   }
@@ -94,6 +111,7 @@ class MovieRecommenderALS(sc: SparkContext, movieLensHomeDir: String) {
   def run() {
 
     // load ratings and movie titles
+    println("\n Reading data from " + movieLensHomeDir)
 
     val ratings = readRatingsFile(movieLensHomeDir + "/ratings.dat")
     val movies = readMoviesFile(movieLensHomeDir + "/movies.dat").collect.toMap
@@ -103,7 +121,7 @@ class MovieRecommenderALS(sc: SparkContext, movieLensHomeDir: String) {
     val numUsers = countUsers(ratings)
     val numMovies = countMovies(ratings)
 
-    println("Ratings: " + numRatings + ", users: " + numUsers + ", movies: " + numMovies)
+    println("\n Ratings: " + numRatings + ", users: " + numUsers + ", movies: " + numMovies)
 
     // sample a subset of most rated movies for rating elicitation
     val mostRatedMovieIds = getMostPopularMoviesID(ratings)
@@ -118,7 +136,7 @@ class MovieRecommenderALS(sc: SparkContext, movieLensHomeDir: String) {
     val myRatings = elicitateRatings(selectedMovies)
     val myRatingsRDD =  sc.parallelize(myRatings, 1) // Create an RDD from the ratings
 
-    // split ratings into train (60%), validation (20%), and test (20%) based on the 
+    // split ratings into train (60%), validation (20%), and test (20%) based on the
     // last digit of the timestamp, add myRatings to train, and cache them
     val (training, validation, test) = splitData(ratings, myRatingsRDD)
 
@@ -126,12 +144,12 @@ class MovieRecommenderALS(sc: SparkContext, movieLensHomeDir: String) {
     val numValidation = validation.count
     val numTest = test.count
 
-    println("Training: " + numTraining + ", validation: " + numValidation + ", test: " + numTest)
+    println("\n Training: " + numTraining + ", validation: " + numValidation + ", test: " + numTest)
 
     // Cross-validation: train models and evaluate them on the validation set
     // Use a function to perform cross-validation
     val ranks = List(8, 12)
-    val lambdas = List(0.1, 10.0)
+    val lambdas = List(0.01, .1)
     val numIters = List(10, 20)
     var bestModel: Option[MatrixFactorizationModel] = None
     var bestValidationRmse = Double.MaxValue
@@ -139,9 +157,9 @@ class MovieRecommenderALS(sc: SparkContext, movieLensHomeDir: String) {
     var bestLambda = -1.0
     var bestNumIter = -1
     for (rank <- ranks; lambda <- lambdas; numIter <- numIters) {
-      val model = ALS.train(training, rank, numIter, lambda)
+      val model = ???
       val validationRmse = computeRmse(model, validation, numValidation)
-      println("RMSE (validation) = " + validationRmse + " for the model trained with rank = " 
+      println("\n RMSE (validation) = " + validationRmse + " for the model trained with rank = "
         + rank + ", lambda = " + lambda + ", and numIter = " + numIter + ".")
       if (validationRmse < bestValidationRmse) {
         bestModel = Some(model)
@@ -155,15 +173,14 @@ class MovieRecommenderALS(sc: SparkContext, movieLensHomeDir: String) {
     // evaluate the best model on the test set
     val testRmse = computeRmse(bestModel.get, test, numTest)
 
-    println("The best model was trained with rank = " + bestRank + " and lambda = " + bestLambda
+    println("\n The best model was trained with rank = " + bestRank + " and lambda = " + bestLambda
       + ", and numIter = " + bestNumIter + ", and its RMSE on the test set is " + testRmse + ".")
 
     // create a naive baseline and compare it with the best model
-
     val meanRating = computeMeanRating(training, validation)
     val baselineRmse = computeBaselineRMSE(meanRating, test, numTest)
     val improvement = (baselineRmse - testRmse) / baselineRmse * 100
-    println("The best model improves the baseline by " + "%1.2f".format(improvement) + "%.")
+    println("\n The best model improves the baseline by " + "%1.2f".format(improvement) + "%.")
 
     // make personalized recommendations
     val myRatedMovieIds = myRatings.map(_.product).toSet
@@ -171,12 +188,11 @@ class MovieRecommenderALS(sc: SparkContext, movieLensHomeDir: String) {
     val recommendations = getRecommendations(bestModel.get, candidates)
 
     var i = 1
-    println("Movies recommended for you:")
+    println("\n Movies recommended for you:")
     recommendations.foreach { r =>
       println("%2d".format(i) + ": " + movies(r.product))
       i += 1
     }
-
   }
 
   /** Elicitate ratings from command-line. */

@@ -1,6 +1,8 @@
 /**
   * Created by maryanmorel on 05/04/16.
   */
+package MovieRecommender
+
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.mllib.recommendation.ALS
 import org.apache.spark.{SparkConf, SparkContext}
