@@ -174,7 +174,7 @@ class Solutions(sc: SparkContext, movieLensHomeDir: String) {
     // Cross-validation: train models and evaluate them on the validation set
     // Use a function to perform cross-validation
     val ranks = List(8, 12)
-    val lambdas = List(0.01, .1)
+    val lambdas = List(.1, .2)
     val numIters = List(10, 20)
     var bestModel: Option[MatrixFactorizationModel] = None
     var bestValidationRmse = Double.MaxValue

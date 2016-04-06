@@ -12,17 +12,24 @@ object Main{
 
   def main(args: Array[String]) {
 
-    if (args.length != 1) {
+    if (args.length != 2) {
       println("""
                 | Usage:
                 |
                 | spark-submit --class Main \
-                |  target/scala-2.10/movierecomenderals_2.10-1.0.jar <MovieLens data size>
+                |  target/scala-2.10/movierecomenderals_2.10-1.0.jar \
+                |  <MovieLens data size> \
+                |  <path/to/movierecommenderals_2.10-1.0.jar>
                 |
                 |  where <MovieLens data size> can be equal to
                 |  ml-100k
                 |  ml-1m
                 |  ml-10m
+                |
+                |  and <path/to/movierecommenderals_2.10-1.0.jar> points to
+                |  the jar resulting of
+                |     sbt package
+                |  command
               """.stripMargin)
       sys.exit(1)
     }
@@ -31,7 +38,7 @@ object Main{
     Logger.getLogger("org.eclipse.jetty.server").setLevel(Level.OFF)
 
     // set up environment
-    val jarFile = "movierecommenderals_2.10-1.0.jar"
+    val jarFile = args(1) // "movierecommenderals_2.10-1.0.jar"
     val conf = new SparkConf()
       .setAppName("MovieLensALS")
       .setJars(Seq(jarFile))
