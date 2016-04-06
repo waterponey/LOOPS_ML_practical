@@ -4,6 +4,27 @@ import org.apache.spark.SparkContext
 import org.apache.spark.rdd._
 import org.apache.spark.mllib.recommendation.{ALS, Rating, MatrixFactorizationModel}
 
+/**
+  * Fill in the ??? with the appropriate code.
+  * This tutorial has been designed for Scala 2.10.4 and Spark 1.5.2
+  * you can download this version of Spark at:
+  * http://d3kbcqa49mib13.cloudfront.net/spark-1.5.2-bin-hadoop2.6.tgz
+  *
+  * Spark documentation can be found here:
+  * https://spark.apache.org/docs/1.5.2/index.html
+  * Doc of the Scala API:
+  * https://spark.apache.org/docs/1.5.2/api/scala/index.html#org.apache.spark.package
+  *
+  * You can test your code using
+  *     sbt test
+  * in your terminal or by using any IDE supporting Scala & SBT.
+  * The "test suite" should run in 5-20 sec depending on your configuration.
+  * The tests require to set the SPARK_HOME environment variable.
+  * Please set it in your environment and/or IDE, e.g.
+  * $ export SPARK_ENV=/opt/spark/spark-1.5.2-bin-hadoop2.6
+  *
+  */
+
 
 class MovieRecommenderALS(sc: SparkContext, movieLensHomeDir: String) {
 
