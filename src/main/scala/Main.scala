@@ -1,39 +1,56 @@
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.{SparkConf, SparkContext}
 
-import scala.io.Source
+import scopt.OptionParser
 
 /**
   * Created by maryanmorel on 05/04/16.
   */
 object Main{
 
-  def main(args: Array[String]) {
+  case class Params(size: String = "ml-100k")
 
-    if (args.length != 1) {
-      println("Usage: sbt/sbt package \"run movieLensHomeDir\"")
-      sys.exit(1)
+  def main(args: Array[String]) {
+    val defaultParams = Params()
+
+    val parser = new OptionParser[Params]("MovieLensALS") {
+      head("MovieRecommenderALS: a spark mllib tutorial for ALS on MovieLens data.")
+      opt[String]("size")
+        .required()
+        .text("Size of the MovieLens dataset to use")
+        .action((x, c) => c.copy(size = x))
+      note(
+        """
+          |For example, the following command runs this app on a the MovieLens 100k dataset:
+          |
+          | spark-submit --class Main \
+          |  target/scala-2.10/movierecomenderals_2.10-1.0.jar \
+          |  ml-100k
+        """.stripMargin)
     }
 
-    Logger.getLogger("org.apache.spark").setLevel(Level.WARN)
-    Logger.getLogger("org.eclipse.jetty.server").setLevel(Level.OFF)
+    parser.parse(args, defaultParams).map { params =>
+      Logger.getLogger("org.apache.spark").setLevel(Level.WARN)
+      Logger.getLogger("org.eclipse.jetty.server").setLevel(Level.OFF)
 
-    // set up environment
-    val jarFile = "target/scala-2.10/movierecommenderals_2.10-1.0.jar"
-    val sparkHome = sys.env("SPARK_HOME")
-    val master = Source.fromFile("/root/spark-ec2/cluster-url").mkString.trim
-    val masterHostname = Source.fromFile("/root/spark-ec2/masters").mkString.trim
-    val conf = new SparkConf()
-      .setMaster(master)
-      .setSparkHome(sparkHome)
-      .setAppName("MovieLensALS")
-      //    .set("spark.executor.memory", "2g")
-      .setJars(Seq(jarFile))
-    val sc = new SparkContext(conf)
+      // set up environment
+      val jarFile = "target/scala-2.10/movierecommenderals_2.10-1.0.jar"
+      val conf = new SparkConf()
+        .setAppName("MovieLensALS")
+        .setJars(Seq(jarFile))
+      val sc = new SparkContext(conf)
 
-    val movieLensHomeDir = "hdfs://" + masterHostname + ":9000" + args(0)
+      val movieLensHomeDir = "hdfs://movielens/" + params.size
 
-    val recommendationEngine = new MovieRecommenderALS(sc, movieLensHomeDir)
-    recommendationEngine.run()
+      val recommendationEngine = new MovieRecommenderALS(sc, movieLensHomeDir)
+      recommendationEngine.run()
+      // Clean up
+      sc.stop()
+      // All clear
+      true
+    } getOrElse {
+      System.exit(1)
+    }
   }
+
 }

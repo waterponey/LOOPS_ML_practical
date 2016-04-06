@@ -58,15 +58,13 @@ class MovieRecommenderALS(sc: SparkContext, movieLensHomeDir: String) {
   }
 
   /** Using ratings data:
-    * Split ratings into train (60%), validation (20%), and test (20%) sets based on the last digit of the timestamp.
-    * Use the rating for training if last digit < 6
-    * for validation if last digit >= 6 and < 8
-    * for testing otherwise
-    * Add myRatings to train.
-    * The resulting RDDs must be cached to avoid being recomputed at each loop of the cross-validation.*/
+    * Split ratings into train (60%), validation (20%), and test (20%) sets.
+    * Use the RDD.randomSplit(Array(0.8, 0.2)) method, with seed 42
+    * The resulting RDDs must be cached to avoid being recomputed at each loop of the cross-validation. */
   def splitData(ratings: RDD[(Long, Rating)], myRatingsRDD: RDD[Rating]):
                   (RDD[Rating], RDD[Rating], RDD[Rating]) = {
     val numPartitions = 20
+    val splits = ???
     val training = ???
     val validation = ???
     val test = ???
@@ -179,10 +177,8 @@ class MovieRecommenderALS(sc: SparkContext, movieLensHomeDir: String) {
       i += 1
     }
 
-    // clean up
-    sc.stop()
   }
-  
+
   /** Elicitate ratings from command-line. */
   def elicitateRatings(movies: Seq[(Int, String)]) = {
     val prompt = "Please rate the following movie (1-5 (best), or 0 if not seen):"
@@ -199,7 +195,21 @@ class MovieRecommenderALS(sc: SparkContext, movieLensHomeDir: String) {
           } else {
             valid = true
             if (r > 0) {
-              rating = Some(Rating(0, x._1, r))
+              /*
+               * MovieLens ratings are on a scale of 1-5:
+               * 5: Must see
+               * 4: Will enjoy
+               * 3: It's okay
+               * 2: Fairly bad
+               * 1: Awful
+               * So we should not recommend a movie if the predicted rating is less than 3.
+               * To map ratings to confidence scores, we use
+               * 5 -> 2.5, 4 -> 1.5, 3 -> 0.5, 2 -> -0.5, 1 -> -1.5. This mappings means unobserved
+               * entries are generally between It's okay and Fairly bad.
+               * The semantics of 0 in this expanded world of non-positive weights
+               * are "the same as never having interacted at all".
+               */
+              rating = Some(Rating(0, x._1, r.toDouble - 2.5))
             }
           }
         } catch {
