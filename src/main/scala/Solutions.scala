@@ -91,7 +91,7 @@ class Solutions(sc: SparkContext, movieLensHomeDir: String) {
     .reduce(_ + _) / numTest)
   }
 
-  def getRecommendations(bestModel: MatrixFactorizationModel, candidates: RDD[Int]) = {
+  def getRecommendations(bestModel: MatrixFactorizationModel, candidates: RDD[Int]): Array[Rating] = {
     bestModel.predict(candidates.map((0, _)))
       .collect
       .sortBy(- _.rating)

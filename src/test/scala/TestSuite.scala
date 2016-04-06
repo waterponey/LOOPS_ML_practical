@@ -6,7 +6,6 @@ import org.apache.spark.mllib.recommendation.ALS
 import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest.FunSuite
 import org.scalautils._
-import TripleEquals._
 import Tolerance._
 
 
@@ -29,15 +28,23 @@ class TestSuite extends FunSuite {
   val sc = new SparkContext(conf)
   sc.setLogLevel("WARN")
 
+  // Read data
   val movieLensPath = getClass.getClassLoader.getResource("movielensdata").getPath
   val recommender = new MovieRecommenderALS(sc, movieLensPath)
   val expectedRecommender = new Solutions(sc, movieLensPath)
   val ratingsPath = getClass.getClassLoader.getResource("movielensdata/ratings.dat.gz").getPath
   val moviesPath = getClass.getClassLoader.getResource("movielensdata/movies.dat").getPath
 
-  val expectedRatings = expectedRecommender.readRatingsFile(ratingsPath)
+  // Useful objects for testing
+  val expectedRatings = expectedRecommender.readRatingsFile(ratingsPath).persist
+  val expectedRatingsSmall = expectedRatings.sample(false, .05).persist
   val expectedMovies = expectedRecommender.readMoviesFile(moviesPath).collect.toMap
+  val train = expectedRatingsSmall.map(_._2).persist
+  val numTrain = train.count
+  val model = ALS.train(train, 1, 1, 1)
+  val myRatings = expectedRatingsSmall.sample(false, .1).map(_._2).persist
 
+  // Tests
   test("Question1a: read ratings") {
     val ratings = recommender.readRatingsFile(ratingsPath)
     val numRatings = ratings.count
@@ -81,34 +88,28 @@ class TestSuite extends FunSuite {
   }
 
   test("Question4: split data") {
-    val myRatings = expectedRatings.sample(false, .1).map(_._2)
-    val (training, validation, test) = recommender.splitData(expectedRatings, myRatings)
-    val (expectedTraining, expectedValidation, expectedTest) = expectedRecommender.splitData(expectedRatings, myRatings)
+    val (training, validation, test) = recommender.splitData(expectedRatingsSmall, myRatings)
+    val (expectedTraining, expectedValidation, expectedTest) = expectedRecommender.splitData(expectedRatingsSmall, myRatings)
     assert(training.map(_.toString).takeOrdered(3) === expectedTraining.map(_.toString).takeOrdered(3))
     assert(validation.map(_.toString).takeOrdered(3) === expectedValidation.map(_.toString).takeOrdered(3))
     assert(test.map(_.toString).takeOrdered(3) === expectedTest.map(_.toString).takeOrdered(3))
   }
 
   test("Question5: RMSE on model") {
-    val training = expectedRatings.map(_._2)
-    val numTraining = training.count
-    val model = ALS.train(training, 8, 10, 0.1)
-    val rmse = recommender.computeRmse(model, training, numTraining)
-    val expectedRmse = expectedRecommender.computeRmse(model, training, numTraining)
+    val rmse = recommender.computeRmse(model, train, numTrain)
+    val expectedRmse = expectedRecommender.computeRmse(model, train, numTrain)
     assert(rmse == expectedRmse)
   }
 
-  test("Question6: Compute mean rating and baseline") {
-    val myRatings = expectedRatings.sample(false, .1).map(_._2)
-    val (training, validation, test) = expectedRecommender.splitData(expectedRatings, myRatings)
+  test("Question6: Compute mean rating") {
+    val (training, validation, test) = expectedRecommender.splitData(expectedRatingsSmall, myRatings)
     val mean = recommender.computeMeanRating(training, validation)
     val expectedMean = expectedRecommender.computeMeanRating(training, validation)
     assert(mean === expectedMean +- 1e-5)
   }
 
-  test("Question7: compute baseline") {
-    val myRatings = expectedRatings.sample(false, .1).map(_._2)
-    val (training, validation, test) = expectedRecommender.splitData(expectedRatings, myRatings)
+  test("Question7: compute baseline error") {
+    val (training, validation, test) = expectedRecommender.splitData(expectedRatingsSmall, myRatings)
     val expectedMean = expectedRecommender.computeMeanRating(training, validation)
     val numTest = test.count
     val baseline = recommender.computeBaselineRMSE(expectedMean, test, numTest)
@@ -117,13 +118,7 @@ class TestSuite extends FunSuite {
   }
 
   test("Question8: get recommendations") {
-    val myRatedMovieIds = expectedRatings.sample(false, .1)
-                                         .map(_._2)
-                                         .collect()
-                                         .map(_.product)
-                                         .toSet
-    val training = expectedRatings.map(_._2)
-    val model = ALS.train(training, 8, 10, 0.1)
+    val myRatedMovieIds = myRatings.collect().map(_.product).toSet
     val candidates = sc.parallelize(expectedMovies.keys.filter(!myRatedMovieIds.contains(_)).toSeq)
     val recommendations = recommender.getRecommendations(model, candidates)
     val expectedRecommendations = expectedRecommender.getRecommendations(model, candidates)

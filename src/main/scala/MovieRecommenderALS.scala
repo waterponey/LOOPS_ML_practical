@@ -10,24 +10,30 @@ class MovieRecommenderALS(sc: SparkContext, movieLensHomeDir: String) {
   /** Read the ratings file and parse its lines to get a PairRDD[Long, Rating[Int, Int, Double]]
     * containing (timestamp % 10, Rating(userId, movieId, rating)) */
   def readRatingsFile(path: String): RDD[(Long, Rating)] = {
+    ???
   }
 
   /** Read the movies file and parses its lines to get a PairRDD[Int, String]
     * containing (movieId, movieName) */
   def readMoviesFile(path: String): RDD[(Int, String)] = {
+    ???
   }
 
   def countRatings(ratings: RDD[(Long, Rating)]): Long = {
+    ???
   }
 
   def countUsers(ratings: RDD[(Long, Rating)]): Long = {
+    ???
   }
 
   def countMovies(ratings: RDD[(Long, Rating)]): Long = {
+    ???
   }
 
   /** Return the ID of the 50 most rated movies */
   def getMostPopularMoviesID(ratings: RDD[(Long, Rating)]): Seq[Int] = {
+    ???
   }
 
   /** Using ratings data:
@@ -62,7 +68,7 @@ class MovieRecommenderALS(sc: SparkContext, movieLensHomeDir: String) {
     ???
   }
 
-  def getRecommendations(bestModel: MatrixFactorizationModel, candidates: RDD[Int]) = {
+  def getRecommendations(bestModel: MatrixFactorizationModel, candidates: RDD[Int]): Array[Rating] = {
     ???
   }
 
