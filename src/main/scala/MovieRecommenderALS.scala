@@ -157,6 +157,9 @@ class MovieRecommenderALS(sc: SparkContext, movieLensHomeDir: String) {
     var bestLambda = -1.0
     var bestNumIter = -1
     for (rank <- ranks; lambda <- lambdas; numIter <- numIters) {
+      /** Question 9
+        * train an ALS model for (rank, lambda, numIter) on the following line
+        *  */
       val model = ???
       val validationRmse = computeRmse(model, validation, numValidation)
       println("\n RMSE (validation) = " + validationRmse + " for the model trained with rank = "
