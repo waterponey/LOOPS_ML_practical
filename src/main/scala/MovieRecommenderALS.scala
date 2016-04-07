@@ -84,7 +84,9 @@ class MovieRecommenderALS(sc: SparkContext, movieLensHomeDir: String) {
   }
 
   /** Question 5
-    * Compute RMSE (Root Mean Squared Error). */
+    * Compute RMSE (Root Mean Squared Error). If you don't know what is RMSE:
+    * https://en.wikipedia.org/wiki/Root-mean-square_deviation
+    * */
   def computeRmse(model: MatrixFactorizationModel, data: RDD[Rating], n: Long): Double = {
     ???
   }
