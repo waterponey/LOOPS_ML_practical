@@ -1,5 +1,7 @@
 # LOOPS practical session: Machine learning with Spark
 
+#### Loops presentation: [REX Machine learning](http://maryanmorel.github.io/LOOPS_ML_practical)
+
 A large part of this material is taken from [AMPCAMP 5](http://ampcamp.berkeley.edu/5/)
 
 One of the most common uses of big data is to predict what users want.
