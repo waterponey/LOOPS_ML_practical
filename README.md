@@ -50,6 +50,8 @@ First, if you don't have them already, please download and install:
 - [Scala 2.10.4](http://www.scala-lang.org/download/2.10.4.html)
 - [sbt](http://www.scala-sbt.org/)
 
+You don't know about Scala yet? You can read this very quick [introduction](https://learnxinyminutes.com/docs/scala/)
+
 Then download and decompress Spark 1.5.2 [here](http://d3kbcqa49mib13.cloudfront.net/spark-1.5.2-bin-hadoop2.6.tgz).
 To run the tests, you will need to set the environment variable `SPARK_HOME`
 
