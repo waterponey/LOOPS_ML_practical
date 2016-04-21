@@ -1,5 +1,5 @@
 machine:
   java:
     version: openjdk7
-  scala:
+  sbt:
     version: 0.13.9
