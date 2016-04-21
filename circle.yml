@@ -1,0 +1,5 @@
+machine:
+  java:
+    version: openjdk7
+  scala:
+    version: 0.13.9
