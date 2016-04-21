@@ -1,11 +1,13 @@
 machine:
   java:
     version: openjdk8
+  environment:
+    SPARK_HOME: /home/ubuntu/spark-1.6.1-bin-hadoop2.6
 
 dependencies:
-  pre:
-    - wget -q https://dl.bintray.com/sbt/debian/sbt-0.13.7.deb
-    - sudo dpkg -i sbt-0.13.7.deb
   cache_directories:
     - "~/.ivy2"
     - "~/.sbt"
+    - "~/spark-1.6.1-bin-hadoop2.6"
+  pre:
+    - if [[ ! -e ~/spark-1.6.1-bin-hadoop2.6/bin/spark-shell ]]; then pushd ~ && wget http://www.apache.org/dist/spark/spark-1.6.1/spark-1.6.1-bin-hadoop2.6.tgz && tar xzf spark-1.6.1-bin-hadoop2.6.tgz && popd ; fi
