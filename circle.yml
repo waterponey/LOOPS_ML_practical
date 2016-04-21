@@ -11,3 +11,6 @@ dependencies:
     - "~/spark-1.6.1-bin-hadoop2.6"
   pre:
     - if [[ ! -e ~/spark-1.6.1-bin-hadoop2.6/bin/spark-shell ]]; then pushd ~ && wget http://www.apache.org/dist/spark/spark-1.6.1/spark-1.6.1-bin-hadoop2.6.tgz && tar xzf spark-1.6.1-bin-hadoop2.6.tgz && popd ; fi
+    - mkdir ~/sbt
+    - if [[ ! -e ~/sbt/sbt-0.13.7.deb ]]; then pushd ~/sbt && wget -q https://dl.bintray.com/sbt/debian/sbt-0.13.7.deb && popd; fi
+    - sudo dpkg -i ~/sbt/sbt-0.13.7.deb
