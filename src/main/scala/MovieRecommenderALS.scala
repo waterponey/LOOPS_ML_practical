@@ -34,7 +34,11 @@ class MovieRecommenderALS(sc: SparkContext, movieLensHomeDir: String) {
     * Read the ratings file and parse its lines to get a PairRDD[Long, Rating[Int, Int, Double]]
     * containing (timestamp % 10, Rating(userId, movieId, rating)) */
   def readRatingsFile(path: String): RDD[(Long, Rating)] = {
-    ???
+    val ratings = sc.textFile(path)
+    ratings.map { line =>
+      val fields = line.split("::")
+      (fields(3).toLong % 10, Rating(fields(0).toInt, fields(1).toInt, fields(2).toDouble))
+    }
   }
 
   /** Question 1b
